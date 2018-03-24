@@ -1,18 +1,12 @@
-# ssrefresh
+# SSRefresh ![version](https://img.shields.io/badge/version-0.0.1-green.svg) ![vue-version](https://img.shields.io/badge/vue-%5E2.5.0-brightgreen.svg)
 
-> a refresh component of vue
+> A Refresh Component of vue
 
-## Build Setup
+![Warning](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/FBIWarning.png)
 
-``` bash
-# install dependencies
-npm install
+**警告: 破轮子还未完成**
 
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-```
-
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## Feature 
+- [ ] 加入检测刷新改变的钩子函数
+- [ ] 加入反复触发的缩放值钩子函数
+- [ ] 加入传入hascontiner 的非全屏方式

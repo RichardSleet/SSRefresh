@@ -2,8 +2,10 @@
 
 > A Refresh Component of vue
 
-![Warning](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/FBIWarning.png)
-**警告: 谨慎使用**
+![Warning](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/FBIWarning.png)  
+
+**警告: 谨慎使用**  
+
 ![Demo](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/SSRefreshDemo.gif)
 
 Prop  | 备注

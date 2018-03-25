@@ -4,9 +4,9 @@
 
 ![Warning](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/FBIWarning.png)
 
-**警告: 破轮子还未完成**
+**警告: 谨慎使用**
 
 ## Feature 
-- [ ] 加入检测刷新改变的钩子函数
-- [ ] 加入反复触发的缩放值钩子函数
+- [x] 加入检测刷新改变的钩子函数
+- [x] 加入反复触发的缩放值钩子函数
 - [ ] 加入传入hascontiner 的非全屏方式

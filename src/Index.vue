@@ -1,7 +1,6 @@
 
 <template>
-    <div class="refresh__container" ref="container" @scroll="onScrollThrottle" 
-    @touchstart.stop="onTouchStart" @touchmove.stop="onTouchMove" @touchend.stop="onTouchend">
+    <div class="refresh__container" ref="container" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchend">
         <div v-if="!hasContainer" ref="refreshView" class="refresh-view">
             <slot name="refresh-view" >
             </slot>
@@ -11,17 +10,23 @@
         </div>
     </div>
 </template>
-
 <script>
 const getNumberUtils = function(str) {
     return Number(str.slice(0, -2));
 };
-const throttle = function(method, context) {
-    clearTimeout(method.tId);
+const debounce = function(method, context) {
+    if (method.tId) {
+        return;
+    }
     method.tId = setTimeout(function() {
         window.requestAnimationFrame(method.bind(context));
-    }, 100);
+        clearTimeout(method.tId);
+    }, 25);
 };
+//判断动画结束状态
+const transitions = ['transitionend', 'oTransitionEnd', 'transitionend', 'webkitTransitionEnd'];
+//响应判别手势的 touch 对象存储
+var isPanArr = [];
 export default {
     name: 'refresh',
     props: {
@@ -29,6 +34,26 @@ export default {
         hasContainer: {
             type: Boolean,
             default: false
+        },
+        onCritical: {
+            //处于刷新的边界条件
+            type: Function,
+            default: (efreshViewHieght) => {}
+        },
+        onRefresh: {
+            type: Function,
+            default: (EndRefresh) => {}
+        },
+        onRefreshViewChange: {
+            type: Function,
+            default: () => {}
+        },
+        debounce: {
+            type: Number,
+            default: 50,
+            validator: function (value) {
+                return value > 0;
+            }
         }
     },
     data() {
@@ -44,7 +69,11 @@ export default {
             // 是否正在刷新
             refreshing: false,
             // 插槽提供的子元素的高度
-            slotRefreshViewHieght: 0
+            slotRefreshViewHieght: 0,
+            // 刷新临界值的: 0 不达到刷新 1 达到舒心
+            criticalFlag: 0,
+            //判别响应拖拽手势
+            isPan: false
         };
     },
     mounted() {
@@ -56,20 +85,16 @@ export default {
         } else {
             this.$refs.container.style.setProperty('overflow', 'hidden');
         }
-        this.slotRefreshViewHieght = document.querySelector('.refresh-view').firstElementChild.style.height;
+        this.slotRefreshViewHieght = window.getComputedStyle(window.document.querySelector('.refresh-view').firstElementChild).height;
     },
     methods: {
-        onScrollThrottle() {
-            throttle(() => {
-                this.$toast(`${this.$refs.container.scrollTop}`);
-            });
-        },
         onTouchStart(e) {
             //只有在顶部的时候才可以拉伸
             if (this.$refs.container.scrollTop === 0) {
                 this.touchStartPageY = e.targetTouches[0].pageY;
                 this.touchID = e.targetTouches[0].identifier;
             }
+
         },
         onTouchMove(e) {
             if (!this.touchStartPageY) {
@@ -80,62 +105,91 @@ export default {
                 //同一手势下的触发
                 this.refreshViewHieght = (e.targetTouches[0].clientY - this.touchStartPageY) / this.slidRatio;
                 if (this.refreshViewHieght > 0) {
-                    //下滑手势
-                    e.preventDefault();
-                    this.$refs.refreshView.style.height = `${this.refreshViewHieght}px`;
-                    if (this.$refs.refreshView.style.height >= this.slotRefreshViewHieght) {
-                        //可以松手刷新视图
-                    } else {
-                        //未达到舒心边界
+                    const onCriticalFunc = function () {
+                        if (this.isPan) {
+                            this.$refs.refreshView.style.height = `${this.refreshViewHieght}px`;
+                        }
+                    };
+                    //防抖
+                    debounce(onCriticalFunc, this);
+                    var refreshViewHeight = getNumberUtils(this.$refs.refreshView.style.height);
+                    var slotRefreshViewHieght = getNumberUtils(this.slotRefreshViewHieght);
+                    if (refreshViewHeight >= slotRefreshViewHieght && !this.criticalFlag) {
+                        this.criticalFlag = 1;
+                        this.$props.onCritical(1);
+                    } else if (refreshViewHeight < slotRefreshViewHieght && this.criticalFlag) {
+                        this.criticalFlag = 0;
+                        this.$props.onCritical(0);
                     }
-                }
-                if (this.refreshViewHieght === 0) {
-                    //下滑手势
                     e.preventDefault();
-                    this.$refs.refreshView.style.height = `${this.refreshViewHieght}px`;
+                } else {
+                    this.$refs.refreshView.style.height = '0px';
+                    return;
                 }
+                const onRefreshViewChangeFunc = function() {
+                    this.$props.onRefreshViewChange.bind(this)(this.refreshViewHieght);
+                };
+                debounce(onRefreshViewChangeFunc, this);
+                //是否是拖拽手势
+                if (isPanArr.length >= 5) {
+                    this.isPan = true;
+                }
+                isPanArr.push(e);
             }
         },
         onTouchend(e) {
-            if (this.touchID !== null) {
+            if (this.touchID !== null && this.isPan) {
                 //重置复位
                 var refreshViewHeight = getNumberUtils(this.$refs.refreshView.style.height);
                 var slotRefreshViewHieght = getNumberUtils(this.slotRefreshViewHieght);
-                if (refreshViewHeight >= slotRefreshViewHieght) {
+                if (refreshViewHeight > slotRefreshViewHieght) {
                     //滑动距离触发更新时
                     this.refreshing = true;
+                    //触发钩子
+                    this.$props.onRefresh(this.EndRefresh.bind(this));
                     //动画效果设置
                     this.$refs.refreshView.style.height = this.slotRefreshViewHieght;
                     this.$refs.refreshView.style.transition = '0.3s height ease-in';
-                } else {
+                    transitions.forEach((element) => {
+                        this.$refs.refreshView.addEventListener(element, () => {
+                            this.$refs.refreshView.style.transition = '';
+                        });
+                    });
+                } else if (!refreshViewHeight && this.isPan) {
+                    //重置复位
+                    this.$refs.refreshView.style.height = '0px';
+                } else if (this.isPan) {
                     //重置复位
                     this.$refs.refreshView.style.height = '0px';
                     this.$refs.refreshView.style.transition = '0.3s height ease-in';
-                    setTimeout(() => {
-                        this.$refs.refreshView.style.transition = '0s';
-                    }, 500);
+                    transitions.forEach((element) => {
+                        this.$refs.refreshView.addEventListener(element, () => {
+                            this.$refs.refreshView.style.transition = '';
+                        });
+                    });
                 }
-                /** 神奇的动画 bug */
-                // setTimeout(() => {
-                //     this.$refs.refreshView.style.transition = '0.5s height ease-in';
-                //     this.$refs.refreshView.style.height = '0px';
-                //     //console.log('next macro');
-                //     //this.$toast('next macro');
-                // }, 0);
-                // setTimeout(() => {
-                //     this.$refs.refreshView.style.transition = '0s';
-                //     //console.log('next macro');
-                //     //this.$toast('next macro');
-                // }, 1);
                 /** 复位 */
                 this.refreshViewHieght = 0;
                 this.touchID = null;
+                this.criticalFlag = 0;
+                isPanArr = [];
+                this.isPan = false;
             }
+        },
+        EndRefresh() {
+            //停止刷新时
+            this.$refs.refreshView.style.height = '0px';
+            this.$refs.refreshView.style.transition = '0.3s height ease-in';
+            transitions.forEach((element) => {
+                this.$refs.refreshView.addEventListener(element, () => {
+                    this.$refs.refreshView.style.transition = '';
+                });
+            });
         }
     }
 };
 </script>
-<style scoped>
+<style>
 .refresh__container{
     overflow-y: auto;
 }

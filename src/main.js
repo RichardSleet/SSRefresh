@@ -1,15 +1,22 @@
-import Vue from 'vue'
-import Index from './Index.vue'
+import Vue from 'vue';
+import Demo from './Demo';
+import Index from './Index'
 
-if (process.env.NODE_ENV === 'development') {
-  new Vue({
-    el: '#app',
-    render: h => h(Index)
-  })
-} else {
-  Index.install = function(Vue){
-    Vue.use(Index);
-  };
-  module.exports = Index;
-}
-export default Index;
+new Vue({
+  el: '#app',
+  template: '<Demo/>',
+  components: { Demo }
+})
+
+// if (process.env.NODE_ENV === 'development') {
+//   new Vue({
+//     el: '#app',
+//     template: '<Demo/>',
+//     components: { Demo }
+//   })
+// } else {
+//   Index.install = function(Vue){
+//     Vue.use(Index);
+//   };
+// }
+// export default Index;

@@ -1,10 +1,10 @@
-# SSRefresh ![version](https://img.shields.io/badge/version-0.0.1-green.svg) ![vue-version](https://img.shields.io/badge/vue-%5E2.5.0-brightgreen.svg)
+# SSRefresh ![version](https://img.shields.io/badge/version-1.0.3-green.svg) ![vue-version](https://img.shields.io/badge/vue-%5E2.5.0-brightgreen.svg)
 
 > A Refresh Component of vue
 
 ![Warning](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/FBIWarning.png)  
 
-**警告: 谨慎使用**  
+**警告: 自造轮子,谨慎使用**  
 
 ![Demo](https://raw.githubusercontent.com/RichardSleet/Materials/master/SSComponent/SSRefreshDemo.gif)
 
@@ -16,6 +16,6 @@ hasContainer | 是否拥有包裹视窗默认 false
 onRefreshViewChange(height) | 当视图被拖动的时候,反复触发返回刷新视图的height
 
 ## Feature 
-- [x] 加入检测刷新改变的钩子函数
+- [x] 加入检测刷新改变的钩子函数
 - [x] 加入反复触发的缩放值钩子函数
-- [ ] 加入传入hascontiner 的非全屏方式
+- [ ] 加入传入hascontiner的非全屏方式
